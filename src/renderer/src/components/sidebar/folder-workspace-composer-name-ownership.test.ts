@@ -5,6 +5,7 @@ import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
 import type { ProjectGroup } from '../../../../shared/project-group-types'
 import { submitFolderWorkspaceCreate } from './folder-workspace-composer-submit'
 
+/** Only the id reaches the create call; the rest satisfies the type. */
 function makeProjectGroup(): ProjectGroup {
   return {
     id: 'group-1',
@@ -20,6 +21,7 @@ function makeProjectGroup(): ProjectGroup {
   }
 }
 
+/** Stand-in for the created workspace; the assertion reads the create args, not this. */
 function makeFolderWorkspace(overrides: Partial<FolderWorkspace> = {}): FolderWorkspace {
   return {
     id: 'folder-workspace-1',
