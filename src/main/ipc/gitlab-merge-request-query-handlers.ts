@@ -55,12 +55,27 @@ export function registerGitLabMergeRequestQueryHandlers(store: Store): void {
         page?: number
         perPage?: number
         query?: string
+        labels?: string[]
       }
     ) => {
       const repo = assertRegisteredRepo(args, store)
       const state = normalizeGitLabMRListState(args.state)
       const page = normalizeGitLabPositiveInteger(args.page, 1, 10_000)
       const perPage = normalizeGitLabPositiveInteger(args.perPage, 20, 100)
+      const localArgs = localGitOptionArgs(store, repo)
+      if (args.labels !== undefined) {
+        return listMergeRequests(
+          repo.path,
+          state,
+          page,
+          perPage,
+          repo.issueSourcePreference,
+          normalizeGitLabSearchQuery(args.query),
+          repoConnectionId(repo),
+          localArgs[0] ?? {},
+          args.labels
+        )
+      }
       return listMergeRequests(
         repo.path,
         state,
@@ -69,7 +84,7 @@ export function registerGitLabMergeRequestQueryHandlers(store: Store): void {
         repo.issueSourcePreference,
         normalizeGitLabSearchQuery(args.query),
         repoConnectionId(repo),
-        ...localGitOptionArgs(store, repo)
+        ...localArgs
       )
     }
   )

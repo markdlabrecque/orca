@@ -255,6 +255,39 @@ describe('GitLab IPC handlers', () => {
     )
   })
 
+  it('forwards label filters after local Git options for desktop MRs and combined items', async () => {
+    listMergeRequestsMock.mockResolvedValueOnce({ items: [] })
+    listWorkItemsMock.mockResolvedValueOnce({ items: [] })
+    registerGitLabHandlers(storeWithRepos([repo()]) as Store)
+    const args = { repoPath: '/local/orca', labels: ['needs review'] }
+
+    await ipcHandlers.get('gitlab:listMRs')?.(null, args)
+    await ipcHandlers.get('gitlab:listWorkItems')?.(null, args)
+
+    expect(listMergeRequestsMock).toHaveBeenCalledWith(
+      '/local/orca',
+      'opened',
+      1,
+      20,
+      undefined,
+      undefined,
+      null,
+      {},
+      ['needs review']
+    )
+    expect(listWorkItemsMock).toHaveBeenCalledWith(
+      '/local/orca',
+      'opened',
+      1,
+      20,
+      undefined,
+      undefined,
+      null,
+      {},
+      ['needs review']
+    )
+  })
+
   it('drops blank or whitespace-only search queries to undefined', async () => {
     listMergeRequestsMock.mockResolvedValueOnce({ items: [] })
     registerGitLabHandlers(storeWithRepos([repo()]) as Store)

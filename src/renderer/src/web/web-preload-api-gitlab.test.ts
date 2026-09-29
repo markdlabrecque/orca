@@ -277,7 +277,12 @@ describe('web GitLab preload API', () => {
           return Promise.resolve({
             id: `call-${runtimeCalls.length}`,
             ok: true,
-            result: method === 'gitlab.workItemDetails' ? null : { ok: true, items: [] },
+            result:
+              method === 'status.get'
+                ? { capabilities: ['gitlab.list.label-filter.v1'] }
+                : method === 'gitlab.workItemDetails'
+                  ? null
+                  : { ok: true, items: [] },
             _meta: { runtimeId: 'runtime-1' }
           })
         }
@@ -310,7 +315,8 @@ describe('web GitLab preload API', () => {
       repoPath: '/workspace/repo',
       repoId: 'repo-gitlab-runtime',
       sourceContext,
-      state: 'opened'
+      state: 'opened',
+      labels: ['bug', 'needs review']
     })
     await api.gl.updateMR({
       repoPath: '/workspace/repo',
@@ -328,6 +334,7 @@ describe('web GitLab preload API', () => {
     })
 
     expect(runtimeCalls).toEqual([
+      { method: 'status.get', params: undefined },
       {
         method: 'gitlab.listIssues',
         params: {
@@ -335,7 +342,8 @@ describe('web GitLab preload API', () => {
           repoId: 'repo-gitlab-runtime',
           sourceContext,
           repo: 'id:repo-gitlab-runtime',
-          state: 'opened'
+          state: 'opened',
+          labels: ['bug', 'needs review']
         }
       },
       {
@@ -361,6 +369,40 @@ describe('web GitLab preload API', () => {
         }
       }
     ])
+  })
+
+  it('refuses filtered lists rather than showing unfiltered rows from an older host', async () => {
+    const runtimeCalls: string[] = []
+    vi.doMock('./web-runtime-client', () => ({
+      WebRuntimeClient: class {
+        call(method: string): Promise<RuntimeRpcResponse<unknown>> {
+          runtimeCalls.push(method)
+          return Promise.resolve({
+            id: `call-${runtimeCalls.length}`,
+            ok: true,
+            result: method === 'status.get' ? { capabilities: [] } : { items: [] },
+            _meta: { runtimeId: 'runtime-1' }
+          })
+        }
+
+        close(): void {}
+      }
+    }))
+    const globals = installBrowserGlobals('Linux')
+    writeStoredRuntimeEnvironment(globals.storage)
+    const { installWebPreloadApi } = await import('./web-preload-api')
+    installWebPreloadApi()
+    const args = { repoPath: '/workspace/repo', labels: ['bug'] }
+    const issues = await globals.window.api.gl.listIssues(args)
+    const mrs = await globals.window.api.gl.listMRs(args)
+    const combined = await globals.window.api.gl.listWorkItems(args)
+
+    expect(issues.error?.message).toContain('newer Orca server')
+    expect(mrs.error?.message).toContain('newer Orca server')
+    expect(combined.error?.message).toContain('newer Orca server')
+    expect(runtimeCalls).not.toContain('gitlab.listIssues')
+    expect(runtimeCalls).not.toContain('gitlab.listMRs')
+    expect(runtimeCalls).not.toContain('gitlab.listWorkItems')
   })
 
   it('does not send the ready semantic field to an older paired host', async () => {

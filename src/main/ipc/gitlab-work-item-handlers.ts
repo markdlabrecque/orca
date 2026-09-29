@@ -29,9 +29,24 @@ export function registerGitLabWorkItemHandlers(store: Store): void {
         page?: number
         perPage?: number
         query?: string
+        labels?: string[]
       }
     ) => {
       const repo = assertRegisteredRepo(args, store)
+      const localArgs = localGitOptionArgs(store, repo)
+      if (args.labels !== undefined) {
+        return listWorkItems(
+          repo.path,
+          normalizeGitLabMRListState(args.state),
+          normalizeGitLabPositiveInteger(args.page, 1, 10_000),
+          normalizeGitLabPositiveInteger(args.perPage, 20, 100),
+          repo.issueSourcePreference,
+          normalizeGitLabSearchQuery(args.query),
+          repoConnectionId(repo),
+          localArgs[0] ?? {},
+          args.labels
+        )
+      }
       return listWorkItems(
         repo.path,
         normalizeGitLabMRListState(args.state),
@@ -40,7 +55,7 @@ export function registerGitLabWorkItemHandlers(store: Store): void {
         repo.issueSourcePreference,
         normalizeGitLabSearchQuery(args.query),
         repoConnectionId(repo),
-        ...localGitOptionArgs(store, repo)
+        ...localArgs
       )
     }
   )
