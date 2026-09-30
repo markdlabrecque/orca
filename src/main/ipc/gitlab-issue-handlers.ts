@@ -62,7 +62,7 @@ export function registerGitLabIssueHandlers(store: Store): void {
         repoConnectionId(repo),
         localGitOptionArgs(store, repo)[0] ?? {},
         page,
-        ...(args.labels === undefined ? [] : [args.labels])
+        args.labels
       )
       // Why: Tasks page expects GitLabWorkItem[] so it can share row
       // rendering with MRs. Map IssueInfo → WorkItem here so the renderer

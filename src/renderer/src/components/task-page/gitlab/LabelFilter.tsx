@@ -56,10 +56,11 @@ export function TaskPageGitLabLabelFilter({
               ? allLabels
               : selected.length === 1
                 ? selected[0]
-                : translate('auto.components.TaskPage.eff9800d4b', '{{value0}} label{{value1}}', {
-                    value0: selected.length,
-                    value1: 's'
-                  })}
+                : translate(
+                    'auto.components.TaskPage.gitlabSelectedLabelCount',
+                    '{{count}} labels',
+                    { count: selected.length }
+                  )}
           </span>
           <ChevronsUpDown className="size-3.5 shrink-0 opacity-50" />
         </Button>
@@ -112,6 +113,7 @@ export function TaskPageGitLabLabelFilter({
               <CommandItem
                 key={label}
                 value={label}
+                disabled={label.includes(',')}
                 onSelect={() =>
                   onChange(
                     selected.includes(label)
@@ -122,6 +124,11 @@ export function TaskPageGitLabLabelFilter({
               >
                 <Check className={cn('size-3', !selected.includes(label) && 'opacity-0')} />
                 <span className="truncate">{label}</span>
+                {label.includes(',') ? (
+                  <span className="text-xs text-muted-foreground">
+                    {translate('auto.components.TaskPage.gitlabLabelUnsupported', 'Unsupported')}
+                  </span>
+                ) : null}
               </CommandItem>
             ))}
           </CommandList>

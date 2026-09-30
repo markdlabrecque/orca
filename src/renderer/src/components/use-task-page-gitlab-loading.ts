@@ -23,9 +23,10 @@ export function useTaskPageGitLabLoading(model: TaskPageProviderMetadataModel) {
     setGitlabLabelOptions,
     selectedGitlabLabels
   } = model
+  const labelViewActive = gitlabView !== 'todos'
   useEffect(() => {
     setGitlabLabelOptions({ repoKey: selectedReposKey, labels: [], error: false })
-    if (taskSource !== 'gitlab' || gitlabView === 'todos' || selectedRepos.length === 0) {
+    if (taskSource !== 'gitlab' || !labelViewActive || selectedRepos.length === 0) {
       return
     }
     let stale = false
@@ -56,7 +57,7 @@ export function useTaskPageGitLabLoading(model: TaskPageProviderMetadataModel) {
       stale = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedReposKey covers the selected repository fields; array identity changes on unrelated store updates.
-  }, [taskSource, gitlabView, selectedReposKey, gitlabRefreshNonce, setGitlabLabelOptions])
+  }, [taskSource, labelViewActive, selectedReposKey, gitlabRefreshNonce, setGitlabLabelOptions])
 
   // Why: fetch GitLab Issues and MRs separately so errors stay isolated per tab (mirrors GitHub's split endpoints).
   useEffect(() => {

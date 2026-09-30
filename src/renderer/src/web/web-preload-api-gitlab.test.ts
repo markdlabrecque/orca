@@ -400,10 +400,92 @@ describe('web GitLab preload API', () => {
     expect(issues.error?.message).toContain('newer Orca server')
     expect(mrs.error?.message).toContain('newer Orca server')
     expect(combined.error?.message).toContain('newer Orca server')
+    for (const result of [issues, mrs, combined]) {
+      expect(result.error?.type).toBe('validation_error')
+    }
     expect(runtimeCalls).not.toContain('gitlab.listIssues')
     expect(runtimeCalls).not.toContain('gitlab.listMRs')
     expect(runtimeCalls).not.toContain('gitlab.listWorkItems')
   })
+
+  describe.each(['listMRs', 'listWorkItems', 'listIssues'] as const)(
+    '%s label capability probe',
+    (method) => {
+      it.each(['rejection', 'error-envelope'] as const)(
+        'preserves a status %s instead of reporting an old server',
+        async (failure) => {
+          const transportError = new Error('Connection lost during status request')
+          const runtimeCalls: string[] = []
+          vi.doMock('./web-runtime-client', () => ({
+            WebRuntimeClient: class {
+              call(rpcMethod: string): Promise<RuntimeRpcResponse<unknown>> {
+                runtimeCalls.push(rpcMethod)
+                if (rpcMethod === 'status.get') {
+                  return failure === 'rejection'
+                    ? Promise.reject(transportError)
+                    : Promise.resolve({
+                        id: 'status',
+                        ok: false,
+                        error: { code: 'UNAVAILABLE', message: 'Host unavailable' }
+                      })
+                }
+                return Promise.resolve({
+                  id: 'list',
+                  ok: true,
+                  result: { items: [] },
+                  _meta: { runtimeId: 'runtime-1' }
+                })
+              }
+              close(): void {}
+            }
+          }))
+          const globals = installBrowserGlobals('Linux')
+          writeStoredRuntimeEnvironment(globals.storage)
+          const { installWebPreloadApi } = await import('./web-preload-api')
+          installWebPreloadApi()
+          const request = globals.window.api.gl[method]({
+            repoPath: '/workspace/repo',
+            labels: ['bug']
+          })
+          await (failure === 'rejection'
+            ? expect(request).rejects.toBe(transportError)
+            : expect(request).rejects.toMatchObject({
+                message: 'Host unavailable',
+                code: 'UNAVAILABLE'
+              }))
+          expect(runtimeCalls).toEqual(['status.get'])
+        }
+      )
+
+      it.each([undefined, []])('bypasses the capability probe for labels=%j', async (labels) => {
+        const runtimeCalls: string[] = []
+        vi.doMock('./web-runtime-client', () => ({
+          WebRuntimeClient: class {
+            call(rpcMethod: string): Promise<RuntimeRpcResponse<unknown>> {
+              runtimeCalls.push(rpcMethod)
+              return rpcMethod === 'status.get'
+                ? Promise.reject(new Error('Status should not be requested'))
+                : Promise.resolve({
+                    id: 'list',
+                    ok: true,
+                    result: { items: [] },
+                    _meta: { runtimeId: 'runtime-1' }
+                  })
+            }
+            close(): void {}
+          }
+        }))
+        const globals = installBrowserGlobals('Linux')
+        writeStoredRuntimeEnvironment(globals.storage)
+        const { installWebPreloadApi } = await import('./web-preload-api')
+        installWebPreloadApi()
+        expect(
+          await globals.window.api.gl[method]({ repoPath: '/workspace/repo', labels })
+        ).toEqual({ items: [] })
+        expect(runtimeCalls).toEqual([`gitlab.${method}`])
+      })
+    }
+  )
 
   it('does not send the ready semantic field to an older paired host', async () => {
     const runtimeCalls: { method: string; params: unknown }[] = []

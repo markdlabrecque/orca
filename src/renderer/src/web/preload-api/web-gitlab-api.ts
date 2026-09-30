@@ -19,7 +19,7 @@ export function createGitLabApi(): WebGitLabApi {
     callRuntimeResult<Result>(method, mapRepoPathArg(args))
 
   const labelFilterSupported = async (): Promise<boolean> => {
-    const status = await getRemoteRuntimeStatus().catch(() => null)
+    const status = await getRemoteRuntimeStatus()
     return Boolean(status?.capabilities?.includes(GITLAB_LABEL_FILTER_RUNTIME_CAPABILITY))
   }
 

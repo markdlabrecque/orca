@@ -63,19 +63,6 @@ export function registerGitLabMergeRequestQueryHandlers(store: Store): void {
       const page = normalizeGitLabPositiveInteger(args.page, 1, 10_000)
       const perPage = normalizeGitLabPositiveInteger(args.perPage, 20, 100)
       const localArgs = localGitOptionArgs(store, repo)
-      if (args.labels !== undefined) {
-        return listMergeRequests(
-          repo.path,
-          state,
-          page,
-          perPage,
-          repo.issueSourcePreference,
-          normalizeGitLabSearchQuery(args.query),
-          repoConnectionId(repo),
-          localArgs[0] ?? {},
-          args.labels
-        )
-      }
       return listMergeRequests(
         repo.path,
         state,
@@ -84,7 +71,8 @@ export function registerGitLabMergeRequestQueryHandlers(store: Store): void {
         repo.issueSourcePreference,
         normalizeGitLabSearchQuery(args.query),
         repoConnectionId(repo),
-        ...localArgs
+        localArgs[0] ?? {},
+        args.labels
       )
     }
   )

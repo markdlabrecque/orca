@@ -39,19 +39,6 @@ export class RuntimeGitLabQueryCommands {
   ): Promise<Awaited<ReturnType<typeof listWorkItems>>> {
     const repo = await this.deps.resolveRepo(repoSelector)
     const localArgs = this.deps.getLocalGitArgs(repo)
-    if (labels !== undefined) {
-      return listWorkItems(
-        repo.path,
-        state ?? 'opened',
-        page ?? 1,
-        perPage ?? 20,
-        repo.issueSourcePreference,
-        query,
-        repo.connectionId ?? null,
-        localArgs[0] ?? {},
-        labels
-      )
-    }
     return listWorkItems(
       repo.path,
       state ?? 'opened',
@@ -60,7 +47,8 @@ export class RuntimeGitLabQueryCommands {
       repo.issueSourcePreference,
       query,
       repo.connectionId ?? null,
-      ...localArgs
+      localArgs[0] ?? {},
+      labels
     )
   }
 
@@ -74,19 +62,6 @@ export class RuntimeGitLabQueryCommands {
   ): Promise<Awaited<ReturnType<typeof listMergeRequests>>> {
     const repo = await this.deps.resolveRepo(repoSelector)
     const localArgs = this.deps.getLocalGitArgs(repo)
-    if (labels !== undefined) {
-      return listMergeRequests(
-        repo.path,
-        normalizeGitLabMRListState(state),
-        normalizeGitLabPositiveInteger(page, 1, 10_000),
-        normalizeGitLabPositiveInteger(perPage, 20, 100),
-        repo.issueSourcePreference,
-        query,
-        repo.connectionId ?? null,
-        localArgs[0] ?? {},
-        labels
-      )
-    }
     return listMergeRequests(
       repo.path,
       normalizeGitLabMRListState(state),
@@ -95,7 +70,8 @@ export class RuntimeGitLabQueryCommands {
       repo.issueSourcePreference,
       query,
       repo.connectionId ?? null,
-      ...localArgs
+      localArgs[0] ?? {},
+      labels
     )
   }
 
@@ -123,7 +99,7 @@ export class RuntimeGitLabQueryCommands {
       repo.connectionId ?? null,
       this.deps.getLocalGitArgs(repo)[0] ?? {},
       normalized.page,
-      ...(labels === undefined ? [] : [labels])
+      labels
     )
     // Why: web runtime mirrors the desktop preload contract used by TaskPage.
     const items: GitLabWorkItem[] = result.items.map((issue) => ({

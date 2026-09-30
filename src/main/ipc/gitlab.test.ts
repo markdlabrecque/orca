@@ -209,7 +209,9 @@ describe('GitLab IPC handlers', () => {
       20,
       undefined,
       undefined,
-      'builder'
+      'builder',
+      {},
+      undefined
     )
   })
 
@@ -242,7 +244,9 @@ describe('GitLab IPC handlers', () => {
       20,
       undefined,
       'fix login',
-      null
+      null,
+      {},
+      undefined
     )
     expect(listWorkItemsMock).toHaveBeenCalledWith(
       '/local/orca',
@@ -251,7 +255,9 @@ describe('GitLab IPC handlers', () => {
       20,
       undefined,
       'fix login',
-      null
+      null,
+      {},
+      undefined
     )
   })
 
@@ -304,7 +310,9 @@ describe('GitLab IPC handlers', () => {
       20,
       undefined,
       undefined,
-      null
+      null,
+      {},
+      undefined
     )
   })
 
@@ -462,7 +470,8 @@ describe('GitLab IPC handlers', () => {
       undefined,
       undefined,
       null,
-      localGitOptions
+      localGitOptions,
+      undefined
     )
     expect(issueListResult).toMatchObject({ totalPages: 3 })
     expect(listWorkItemsMock).toHaveBeenCalledWith(
@@ -473,7 +482,8 @@ describe('GitLab IPC handlers', () => {
       undefined,
       undefined,
       null,
-      localGitOptions
+      localGitOptions,
+      undefined
     )
     expect(listIssuesMock).toHaveBeenCalledWith(
       '/local/orca',
@@ -483,7 +493,8 @@ describe('GitLab IPC handlers', () => {
       undefined,
       null,
       localGitOptions,
-      3
+      3,
+      undefined
     )
     expect(getIssueMock).toHaveBeenCalledWith('/local/orca', 7, null, localGitOptions)
     expect(createIssueMock).toHaveBeenCalledWith(
