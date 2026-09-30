@@ -2340,6 +2340,7 @@
         "linearEmptyHasWorktree": "No Linear tickets are linked to an Orca workspace yet. Start work from a Linear issue to see it here.",
         "linearOpenAttachedWorkspace": "Open workspace attached to {{value0}}",
         "linearWorktreesColumn": "Workspaces",
+        "gitlabSelectedLabelCount": "{{count}} labels",
         "gitlabSelectedLabelCount_one": "{{count}} label",
         "gitlabSelectedLabelCount_other": "{{count}} labels",
         "gitlabLabelUnsupported": "Unsupported",
